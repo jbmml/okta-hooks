@@ -9,7 +9,13 @@ This application serves sample endpoints for Okta Hooks. It is designed to handl
 
 Also included are Postman collections for configuring the demo in your Okta tenant.
 
+NOTE: JB - Currently the SAML Token Inline Hook is the only working use case. Additional use cases will be added as needed/wanted.
+
 ### Installation
+
+NOTE: JB - The postman collections are not needed right now. You'll just need to modify the mock_data.json file to match your user's email addresses and a new claim will be added with the corresponding value for that user, or a generic value will be added in that claim instead (i.e. not unique to that user).
+
+I (JB) used glitch.me for this deployment. You can do the same or you can deploy somewhere else. Once you set it up you just specify https://<project_name>.glitch.me/okta/hooks/saml-token/domain, where <project_name> is the name of your glitch project.
 
 Several Postman Collections are included in the postman/ directory of the source code for this project. Import those collections into Postman, and configure a Postman Environment for your Okta org. You'll need the following variables:
 
