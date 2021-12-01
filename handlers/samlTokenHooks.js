@@ -1,18 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const app = express();
-const http = require('http').Server(app);
 const request = require('request');
-const util = require('util');
+const http = require('http').Server(app);
 const svr = require('../server.js');
 const io = svr.io;
-const hookCommandTypes = svr.hookCommandTypes;
 const helpers = require('../helpers.js');
 const hookViewer = require('../hookViewer.js');
+const util = require('util');
+const hookCommandTypes = svr.hookCommandTypes;
 
 let title;
 let description;
 let body;
+
+// Read mock data from files
+const fs = require('fs');
+let rawUsersData = fs.readFileSync('./data/mock_data.json');
+let users = JSON.parse(rawUsersData);
 
 /**
 *
@@ -29,53 +34,56 @@ let body;
 *
 **/
 router.post("/domain", (req, res) => {
-
   let requestBody = req.body;
-  let provider = requestBody.data.context.protocol.request.providerName;
-  let issuer = requestBody.data.context.protocol.issuer.name;
   
   title = req.originalUrl;
-  description = `Okta SAML token Hook handler called for provider: <b>${provider}</b>, issuer: <b>${issuer}</b>. Here's the body of the request from Okta:`;
+  description = `Okta SAML token Hook handler called. Here's the body of the request from Okta:`;
   body = requestBody;
   
   hookViewer.emitViewerEvent(title, description, body, true);  
   
-  // Put your commands here
+  // Find User secret attribute
+  const emailAddress = requestBody.data.context.user.profile.login;
+  var mockDirUser = users.users.filter(u => u.email === emailAddress);
+  var userSecretData = mockDirUser[0].secret
+  var secretValue = (userSecretData != "" ? userSecretData : "GENERIC_SECRET_VALUE");
   
-  // all assertions get the sensitiveData demo attribute
+  // all assertions get the sensitiveData demo attribute, value set above
   let debugContext = {
     externalClaims: [
       {
-        sensitiveData: "NOT_STORED_IN_OKTA"
+        sensitiveData: secretValue
       }
     ]
   };
   
+  // Set the value for the commandArray variable used later to send response to Okta
   let commandArray = [
       {
         "op": "add",
         "path": "/claims/sensitiveData",
-        "value":
-        {
-            "attributes":
+        "value": {
+          "attributes":
+          {
+            "NameFormat": "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
+          },            
+          "attributeValues": [
             {
-              "NameFormat": "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
-            },
-            "attributeValues": [
-            {
-                "attributes":
-                {
-                  "xsi:type": "xs:string"
-                },
-                "value": "NOT_STORED_IN_OKTA"
+              "attributes":
+              {
+                "xsi:type": "xs:string"
+              },
+              "value": secretValue
             }
           ]
         }
       }          
-    ]
-     
+  ]
+
+  // This section is a good example of adding additional claims/mods to the assertion
+  // Commented out for now as I'm not using it
+  /*    
   // If the user's email domain is 'allow.example.com', use the 'replace' command to change domain of the subject.nameId
-  const emailAddress = requestBody.data.context.user.profile.login;
   const emailDomain = helpers.parseEmailDomain(emailAddress);
   
   if (emailDomain === 'allow.example.com') {
@@ -96,12 +104,12 @@ router.post("/domain", (req, res) => {
     debugContext.externalClaims.push(newClaimDebugContext);    
     
     commandArray.push(cmd);  
-  }
+  } */
   
   // compose the final 'commands' attribute
   const commands = [
     {
-      "type": hookCommandTypes.SAMLAssertionPatch,
+      "type": hookCommandTypes.samlAssertionPatch,
       "value": commandArray
     }       
   ];
@@ -129,16 +137,16 @@ router.post("/domain", (req, res) => {
 /**
 *
 *  SAML token extensibilty Hook Handler (db lookup example)
-*
+*  JB - NOTE: This does not work at the moment. Fix later for another demo
+*  You'll need to at least fix the commandArray syntax, etc.
 *
 **/
 
 router.post('/dblookup', function(req, res) {
-  
-  let requestBody = req.body;
-  let provider = requestBody.data.context.protocol.request.providerName;
-  let issuer = requestBody.data.context.protocol.issuer.name;
-  let lastName = requestBody.data.context.user.profile.lastName;
+  let requestBody = req.body !== undefined ? req.body : "";
+  let provider = requestBody.data.context.protocol.request.providerName !== undefined ? requestBody.data.context.protocol.request.providerName : "";
+  let issuer = requestBody.data.context.protocol.issuer.name !== undefined ? requestBody.data.context.protocol.issuer.name : "";
+  let lastName = requestBody.data.context.user.profile.lastName !== undefined ? requestBody.data.context.user.profile.lastName : "";
   let last4;
   
   title = '/okta/hooks/saml-token/dblookup';

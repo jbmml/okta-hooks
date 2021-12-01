@@ -11,7 +11,7 @@ const bodyParser = require('body-parser');
 const hookCommandTypes = {
   idTokenPatch: 'com.okta.identity.patch',
   accessTokenPatch: 'com.okta.access.patch',
-  samlAssertionPatch: 'com.okta.tokens.assertion.patch'
+  samlAssertionPatch: 'com.okta.assertion.patch'
 }
 
 module.exports = {

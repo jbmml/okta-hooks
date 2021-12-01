@@ -1,0 +1,22 @@
+{
+    "users": [
+      {
+          "id": "1",
+          "type": "good",
+          "email": "eru@mearthgov.com",
+          "firstNamev": "Eru",
+          "lastName": "Iluvatar",
+          "secret": "erusSecretData",
+          "description": "This is the description for Gorbag Orc"
+      },
+      {
+          "id": "2",
+          "type": "evil",
+          "email": "gorbag.orc@mordorgov.com",
+          "firstName": "Gorbag Orc",
+          "lastName": "Gorbag Orc",
+          "secret": "gorbagsSecretData",
+          "description": "This is the description for Gorbag Orc"
+      }
+    ]
+  }
